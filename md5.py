@@ -60,21 +60,20 @@ def md5(msg):
     for offset in range(0, len(msg), 64):
         chunk = msg[offset:offset + 64]
         chunk_pieces = [int.from_bytes(chunk[i:i+4], 'little') for i in range(0, len(chunk), 4)]
-        print(chunk)
-        print(chunk_pieces)
-        print()
         abcd = (initA, initB, initC, initD)
 
         for i in range(4):
             for r in range(16):
-                print(i, r, abcd)
+                a, b, c, d = abcd
+                print(f'{i} {r:2} ({a:10} {b:10} {c:10} {d:10})')
+                print(f'K({K[i][r]}) S({S[i][r]}) I({i*16+r}) T({T[i*16+r]}) X({chunk_pieces[K[i][r]]})')
                 abcd = _round(abcd, K[i][r], S[i][r], i * 16 + r, chunk_pieces, T, funcs[i])
         print(abcd)
         for i in range(4):
             ans[i] = (ans[i] + abcd[i]) & 0xffffffff
 
     ret = ''
-    ans = [initA, initB, initC, initD]
+    print(list(ans))
     for i in ans:
         little = i.to_bytes(4, 'little')
         big = int.from_bytes(little, 'big')
