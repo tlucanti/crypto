@@ -1,6 +1,15 @@
 
 #include <common.h>
 
+#define debug_chunk(__round_num, ti) do {                                       \
+    dprintf("%u %2u (%10u %10u %10u %10u)\n", __round_num - 1, i,               \
+        hash->as_32vec[0], hash->as_32vec[1],                                   \
+        hash->as_32vec[2], hash->as_32vec[3]);                                  \
+    dprintf("K(%u) S(%u) I(%u) T(%u) X(%u)\n",                                  \
+        K##__round_num[i], S##__round_num[i], ti, T[ti],                        \
+        chunk->as_32vec[K##__round_num[i]]);                                    \
+} while (false)
+
 #define fun1(x, y, z) ((x & y) | (~(x) & z))
 #define fun2(x, y, z) ((x & z) | (~(z) & y))
 #define fun3(x, y, z) (x ^ y ^ z)
@@ -9,9 +18,10 @@
 #define ROUND(__round_num, ti) do {                                             \
     uint32_t fun_val, to_shift, new_b;                                          \
                                                                                 \
+    debug_chunk(__round_num, ti);                                               \
     fun_val = fun##__round_num(hash->b, hash->c, hash->d);                      \
     to_shift = hash->a + fun_val + chunk->as_32vec[K##__round_num[i]] + T[ti];  \
-    new_b = hash->b + cyclic_shift_left(to_shift, S##__round_num[i]);           \
+    new_b = hash->b + __roll_l32(to_shift, S##__round_num[i]);                  \
     hash->a = hash->d;                                                          \
     hash->d = hash->c;                                                          \
     hash->c = hash->b;                                                          \
@@ -43,22 +53,22 @@ typedef union {
 void md5_step(chunk_t *chunk, hash_t *hash)
 {
     static const uint32_t T[64] = {
-        3614090360, 3905402710,  606105819, 3250441966,
-        4118548399, 1200080426, 2821735955, 4249261313,
-        1770035416, 2336552879, 4294925233, 2304563134,
-        1804603682, 4254626195, 2792965006, 1236535329,
-        4129170786, 3225465664,  643717713, 3921069994,
-        3593408605,   38016083, 3634488961, 3889429448,
-         568446438, 3275163606, 4107603335, 1163531501,
-        2850285829, 4243563512, 1735328473, 2368359562,
-        4294588738, 2272392833, 1839030562, 4259657740,
-        2763975236, 1272893353, 4139469664, 3200236656,
-         681279174, 3936430074, 3572445317,   76029189,
-        3654602809, 3873151461,  530742520, 3299628645,
-        4096336452, 1126891415, 2878612391, 4237533241,
-        1700485571, 2399980690, 4293915773, 2240044497,
-        1873313359, 4264355552, 2734768916, 1309151649,
-        4149444226, 3174756917,  718787259, 3951481745
+        0xd76aa478, 0xe8c7b756, 0x242070db, 0xc1bdceee,
+        0xf57c0faf, 0x4787c62a, 0xa8304613, 0xfd469501,
+        0x698098d8, 0x8b44f7af, 0xffff5bb1, 0x895cd7be,
+        0x6b901122, 0xfd987193, 0xa679438e, 0x49b40821,
+        0xf61e2562, 0xc040b340, 0x265e5a51, 0xe9b6c7aa,
+        0xd62f105d, 0x02441453, 0xd8a1e681, 0xe7d3fbc8,
+        0x21e1cde6, 0xc33707d6, 0xf4d50d87, 0x455a14ed,
+        0xa9e3e905, 0xfcefa3f8, 0x676f02d9, 0x8d2a4c8a,
+        0xfffa3942, 0x8771f681, 0x6d9d6122, 0xfde5380c,
+        0xa4beea44, 0x4bdecfa9, 0xf6bb4b60, 0xbebfbc70,
+        0x289b7ec6, 0xeaa127fa, 0xd4ef3085, 0x04881d05,
+        0xd9d4d039, 0xe6db99e5, 0x1fa27cf8, 0xc4ac5665,
+        0xf4292244, 0x432aff97, 0xab9423a7, 0xfc93a039,
+        0x655b59c3, 0x8f0ccc92, 0xffeff47d, 0x85845dd1,
+        0x6fa87e4f, 0xfe2ce6e0, 0xa3014314, 0x4e0811a1,
+        0xf7537e82, 0xbd3af235, 0x2ad7d2bb, 0xeb86d391
     };
     static const unsigned short K1[16] = { 0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15};
     static const unsigned short K2[16] = { 1,  6, 11,  0,  5, 10, 15,  4,  9, 14,  3,  8, 13,  2,  7, 12};
@@ -82,6 +92,9 @@ void md5_step(chunk_t *chunk, hash_t *hash)
     for (unsigned short i = 0; i < 16; ++i) {
         ROUND(4, i + 48);
     }
+    dprintf("(%u, %u, %u, %u)\n",
+        hash->as_32vec[0], hash->as_32vec[1],
+        hash->as_32vec[2], hash->as_32vec[3]);
 }
 
 const unsigned char *md5(const char *message, size_t len)
@@ -92,16 +105,15 @@ const unsigned char *md5(const char *message, size_t len)
     hash_t hash;
     size_t offset = 0;
     static hash_t result;
+    size_t iter = len / 64;
 
     memcpy(result.ptr, init.ptr, 16);
-    if (len >= 64) {
-        for (; offset < len; offset += 64) {
-            memcpy(chunk.ptr, message + offset, 64);
-            memcpy(hash.ptr, init.ptr, 16);
-            md5_step(&chunk, &hash);
-            result.as_64vec[0] += hash.as_64vec[0];
-            result.as_64vec[1] += hash.as_64vec[1];
-        }
+    while (iter--) {
+        memcpy(chunk.ptr, message + offset, 64);
+        memcpy(hash.ptr, result.ptr, 16);
+        md5_step(&chunk, &hash);
+        __mm_iadd_32x4(result.as_32vec, hash.as_32vec);
+        offset += 64;
     }
     remaining = len % 64;
     if (remaining <= 55) {
@@ -109,28 +121,29 @@ const unsigned char *md5(const char *message, size_t len)
         memcpy(chunk.ptr, message + offset, remaining);
         chunk.as_8vec[remaining] = 0x80;
         chunk.as_64vec[7] = len * 8;
-        memcpy(hash.ptr, init.ptr, 16);
+        memcpy(hash.ptr, result.ptr, 16);
         md5_step(&chunk, &hash);
-        result.as_64vec[0] += hash.as_64vec[0];
-        result.as_64vec[1] += hash.as_64vec[1];
+        __mm_iadd_32x4(result.as_32vec, hash.as_32vec);
     } else {
         chunk.as_64vec[7] = 0;
+        memcpy(chunk.ptr, message + offset, remaining);
         chunk.as_8vec[remaining] = 0x80;
-        memcpy(hash.ptr, init.ptr, 16);
+        memcpy(hash.ptr, result.ptr, 16);
         md5_step(&chunk, &hash);
-        result.as_64vec[0] += hash.as_64vec[0];
-        result.as_64vec[1] += hash.as_64vec[1];
+        __mm_iadd_32x4(result.as_32vec, hash.as_32vec);
         memset(chunk.ptr, 0, 64);
         chunk.as_64vec[7] = len * 8;
-        memcpy(hash.ptr, init.ptr, 16);
+        memcpy(hash.ptr, result.ptr, 16);
         md5_step(&chunk, &hash);
-        result.as_64vec[0] += hash.as_64vec[0];
-        result.as_64vec[1] += hash.as_64vec[1];
+        __mm_iadd_32x4(result.as_32vec, hash.as_32vec);
     }
+    dprintf("[%u %u %u %u]\n",
+        result.as_32vec[0], result.as_32vec[1],
+        result.as_32vec[2], result.as_32vec[3]);
     return result.as_str;
 }
 
-const char *md5_to_hex(const unsigned char hash[static 16])
+const char *md5_hexdigest(const unsigned char hash[static 16])
 {
     static char hex[33];
     static const char *alphabet = "0123456789abcdef";

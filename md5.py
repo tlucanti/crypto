@@ -58,11 +58,15 @@ def md5(msg):
     # step 4
     # encryption rounds
     for offset in range(0, len(msg), 64):
+        print('=================================================')
         chunk = msg[offset:offset + 64]
         chunk_pieces = [int.from_bytes(chunk[i:i+4], 'little') for i in range(0, len(chunk), 4)]
-        abcd = (initA, initB, initC, initD)
+        #print(chunk)
+        #print(ans)
 
+        abcd = list(ans)
         for i in range(4):
+            a, b, c, d = abcd
             for r in range(16):
                 a, b, c, d = abcd
                 print(f'{i} {r:2} ({a:10} {b:10} {c:10} {d:10})')
@@ -81,4 +85,4 @@ def md5(msg):
     return ret
 
 
-print(md5('1234567890'))
+print(md5('12345678901234567890123456789012345678901234567890123456789012345'))

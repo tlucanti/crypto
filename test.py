@@ -37,14 +37,18 @@ def md5(message):
     for chunk_ofst in range(0, len(message), 64):
         a, b, c, d = hash_pieces
         chunk = message[chunk_ofst:chunk_ofst+64]
+        print(chunk)
+        print(hash_pieces)
         for i in range(64):
-            print(f'{i // 16:2} {i % 16:2} ({a:10} {b:10} {c:10} {d:10})')
             f = functions[i](b, c, d)
             g = index_functions[i](i)
+            print(f'{i // 16} {i % 16:2} ({a:10} {b:10} {c:10} {d:10})')
+            _X =  int.from_bytes(chunk[4*g:4*g+4], byteorder='little')
+            print(f'K({g}) S({rotate_amounts[i]}) I({i}) T({constants[i]}) X({_X})')
             to_rotate = a + f + constants[i] + int.from_bytes(chunk[4*g:4*g+4], byteorder='little')
             new_b = (b + left_rotate(to_rotate, rotate_amounts[i])) & 0xFFFFFFFF
             a, b, c, d = d, new_b, b, c
-        print(a, b, c, d)
+        print((a, b, c, d))
         for i, val in enumerate([a, b, c, d]):
             hash_pieces[i] += val
             hash_pieces[i] &= 0xFFFFFFFF
@@ -56,4 +60,4 @@ def md5_to_hex(digest):
     raw = digest.to_bytes(16, byteorder='little')
     return '{:032x}'.format(int.from_bytes(raw, byteorder='big'))
 
-print(md5_to_hex(md5('1234567890')))
+print(md5_to_hex(md5('12345678901234567890123456789012345678901234567890123456789012345')))
