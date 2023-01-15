@@ -3,8 +3,8 @@
 #include <string.h>
 #include <assert.h>
 
-#define prt(r, st) do {                 \
-    printf("%d ----------", r);         \
+#define prt(r, name, st) do {           \
+    printf("%d:%s ----------", r, name);\
     for (int i = 0; i < 25; ++i) {      \
         if (i % 5 == 0) printf("\n");   \
         printf(" %20llu", st[i]);       \
@@ -45,8 +45,8 @@ void sha3_keccakf(uint64_t st[25])
     uint64_t t, bc[5];
 
     // actual iteration
+    prt(0, "beg", st);
     for (r = 0; r < KECCAKF_ROUNDS; r++) {
-        prt(r, st);
         // Theta
         for (i = 0; i < 5; i++)
             bc[i] = st[i] ^ st[i + 5] ^ st[i + 10] ^ st[i + 15] ^ st[i + 20];
@@ -56,6 +56,7 @@ void sha3_keccakf(uint64_t st[25])
             for (j = 0; j < 25; j += 5)
                 st[j + i] ^= t;
         }
+        prt(r, "theta", st);
 
         // Rho Pi
         t = st[1];
@@ -65,6 +66,7 @@ void sha3_keccakf(uint64_t st[25])
             st[j] = ROTL64(t, keccakf_rotc[i]);
             t = bc[0];
         }
+        prt(r, "rho+pi", st);
 
         //  Chi
         for (j = 0; j < 25; j += 5) {
@@ -73,18 +75,20 @@ void sha3_keccakf(uint64_t st[25])
             for (i = 0; i < 5; i++)
                 st[j + i] ^= (~bc[(i + 1) % 5]) & bc[(i + 2) % 5];
         }
+        prt(r, "chi", st);
 
         //  Iota
         st[0] ^= keccakf_rndc[r];
+        prt(r, "iota", st);
     }
 }
 
 int main()
 {
-    const char *str = "123\x80\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01";
+    const char str[136] = "123\x80\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01";
     uint64_t msg[25];
 
     memset(msg, 0, 200);
-    prt(999, msg);
+    memcpy(msg, str, 136);
     sha3_keccakf(msg);
 }
