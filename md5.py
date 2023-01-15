@@ -76,6 +76,8 @@ def md5(msg):
         for i in range(4):
             ans[i] = (ans[i] + abcd[i]) & 0xffffffff
 
+    # step 5
+    # hexdigest
     ret = ''
     print(list(ans))
     for i in ans:

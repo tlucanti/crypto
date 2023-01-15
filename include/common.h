@@ -7,12 +7,20 @@
 # include <stdint.h>
 # include <stdbool.h>
 
-# ifdef __debug
+# ifdef __verbose
 #  include <stdio.h>
 #  define dprintf(...) printf(__VA_ARGS__)
-# else /* no debug */
+# else /* no verbose */
 #  define dprintf(...) /* empty */
 # endif
+# ifdef __debug
+#  include <stdio.h>
+#  define PANIC_ON(__expr) do {                                     \
+    if ((__expr) == 0) {                                            \
+        printf("PANIC ON %s:%d\n", __FILE__, __LINE__);             \
+        abort();                                                    \
+    }                                                               \
+} while (false)
 
 # define ALIGNED_16        __attribute__((__aligned__(16)))
 
