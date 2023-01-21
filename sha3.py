@@ -3,7 +3,6 @@ def ROTL64(_v, i):
     return ((_v << i) & 0xffffffffffffffff) | (_v >> (64 - i))
 
 def prt(r, name, a):
-    return
     print(f'{r}:{name} ----------', end='')
     for i in range(25):
         if (i % 5 == 0):
@@ -107,7 +106,7 @@ def sha3(msg, r, c, d):
 
     # stage 2
     # absorbtion
-    S = [0] * (d * 8)
+    S = [0] * (25 * 8)
     assert(len(msg) % r == 0)
     for block in range(0, len(msg), r):
         for i in range(r):
@@ -120,11 +119,11 @@ def sha3(msg, r, c, d):
 
     # stage 3
     # squeezing
-    Z = S[:r]
-    while len(Z) < d:
-        S = long2byte(permutate(byte2long(S), l))
-        Z += S[:r]
-    Z = Z[:d]
+    #Z = S[:r]
+    #while len(Z) < d:
+    #    S = long2byte(permutate(byte2long(S), l))
+    #    Z += S[:r]
+    Z = S[:d]
 
     # stage 4
     # hexdigest

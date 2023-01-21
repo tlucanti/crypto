@@ -12,7 +12,8 @@
 #  define dprintf(...) printf(__VA_ARGS__)
 # else /* no verbose */
 #  define dprintf(...) /* empty */
-# endif
+# endif /* __verbose */
+
 # ifdef __debug
 #  include <stdio.h>
 #  define PANIC_ON(__expr) do {                                     \
@@ -21,6 +22,9 @@
         abort();                                                    \
     }                                                               \
 } while (false)
+# else /* no debug */
+#  define PANIC_ON(__expr) /* empty */
+# endif /* __debug */
 
 # define ALIGNED_16        __attribute__((__aligned__(16)))
 
@@ -34,8 +38,10 @@
 
 # if defined(__clang__) || defined(__GNUC__)
 #  define ___roll_l32_impl(__x, __s) ___roll_l32_impl_builtin(__x, __s)
+#  define ___roll_l64_impl(__x, __s) ___roll_l64_impl_builtin(__x, __s)
 # else /* not clang or gcc */
 #  define ___roll_l32_impl(__x, __s) ___roll_l32_impl_rough(__x, __s)
+#  define ___roll_l64_impl(__x, __s) ___roll_l64_impl_rough(__x, __s)
 # endif
 
 # define ___mm_iadd_32x4_impl_x86(__a, __b) do {                    \
@@ -54,12 +60,21 @@
 
 # define ___roll_l32_impl_builtin(__x, __s) __rold(__x, __s)
 # define ___roll_l32_impl_rough(__x, __s) ((__x) << (__s) | (__x) >> (32 - (__s)))
+# define ___roll_l64_impl_rough(__x, __s) ((__x) << (__s) | (__x) >> (64 - (__s)))
 
-static inline void __mm_iadd_32x4(unsigned int __a[static 4], const unsigned int __b[static 4]) {
+static inline void _mm_iadd_32x4(uint32_t __a[static 4],
+                                 const uint32_t __b[static 4])
+{
     ___mm_iadd_32x4_impl(__a, __b);
 }
 
-static inline uint32_t __roll_l32(unsigned int __x, unsigned short __s) {
+static inline uint32_t _roll_l32(uint32_t __x, unsigned short __s)
+{
+    return ___roll_l32_impl(__x, __s);
+}
+
+static inline uint64_t _roll_l64(uint64_t __x, unsigned short __s)
+{
     return ___roll_l32_impl(__x, __s);
 }
 
