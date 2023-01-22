@@ -38,7 +38,7 @@
 
 # if defined(__clang__) || defined(__GNUC__)
 #  define ___roll_l32_impl(__x, __s) ___roll_l32_impl_builtin(__x, __s)
-#  define ___roll_l64_impl(__x, __s) ___roll_l64_impl_builtin(__x, __s)
+#  define ___roll_l64_impl(__x, __s) ___roll_l64_impl_rough(__x, __s)
 # else /* not clang or gcc */
 #  define ___roll_l32_impl(__x, __s) ___roll_l32_impl_rough(__x, __s)
 #  define ___roll_l64_impl(__x, __s) ___roll_l64_impl_rough(__x, __s)
@@ -75,7 +75,7 @@ static inline uint32_t _roll_l32(uint32_t __x, unsigned short __s)
 
 static inline uint64_t _roll_l64(uint64_t __x, unsigned short __s)
 {
-    return ___roll_l32_impl(__x, __s);
+    return ___roll_l64_impl(__x, __s);
 }
 
 #endif /* COMMON_H */

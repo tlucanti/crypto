@@ -1,8 +1,12 @@
 
+VERBOSE = False
+
 def ROTL64(_v, i):
     return ((_v << i) & 0xffffffffffffffff) | (_v >> (64 - i))
 
 def prt(r, name, a):
+    if not VERBOSE:
+        return
     print(f'{r}:{name} ----------', end='')
     for i in range(25):
         if (i % 5 == 0):
@@ -45,7 +49,7 @@ def permutate(st, l):
         0x0000000080000001, 0x8000000080008008,
     ]
 
-    prt(0, 'beg', st)
+    prt(0, 'start', st)
     for round in range(12 + 2*l):
         # theta
         for i in range(5):
@@ -145,5 +149,6 @@ def sha512(msg):
     return sha3(msg, r=72, c=128, d=64)
 
 if __name__ == '__main__':
-    print(sha256('123'))
+    VERBOSE = True
+    print(sha256('1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456'))
 

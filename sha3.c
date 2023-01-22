@@ -110,7 +110,7 @@ const unsigned char *sha3(const char *message,
 {
     static chunk_t chunk;
     static hash_t result;
-    size_t iter = len / r;
+    size_t iter = len / (r * 8);
     size_t offset = 0;
     unsigned short remaining;
 
@@ -118,10 +118,10 @@ const unsigned char *sha3(const char *message,
     PANIC_ON(c + r != 200);
     memset(chunk.ptr, 0, 200);
     while (iter--) {
-        for (int i = 0; i < r; ++i) {
-            chunk.as_64vec[i] ^= message[offset + i];
+        for (int i = 0; i < (r * 8); ++i) {
+            chunk.as_8vec[i] ^= message[offset + i];
         }
-        offset += r;
+        offset += (r * 8);
         __debug_chunk(0, "start", &chunk);
         keccakF(&chunk);
     }
@@ -130,7 +130,11 @@ const unsigned char *sha3(const char *message,
         chunk.as_8vec[i] ^= message[offset + i];
     }
     chunk.as_8vec[remaining] ^= 0x6;
-    chunk.as_8vec[r * 8 - 1] |= ~message[offset + remaining] & 0x80;
+    if (remaining == (r * 8) - 1) {
+        chunk.as_8vec[r * 8 - 1] |= ~message[offset + remaining] & 0x80;
+    } else {
+        chunk.as_8vec[r * 8 - 1] |= 0x80;
+    }
     __debug_chunk(0, "start", &chunk);
     keccakF(&chunk);
 
