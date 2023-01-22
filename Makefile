@@ -1,12 +1,19 @@
 
-SRC		= md5_run.c md5.c
-FLAGS	= -O0 -g3 -Wall -Wextra -std=c11 -fdiagnostics-color=always
-INCLUDE	= -I .
+CFLAGS		=	-Wall -Wextra
+CC			=	clang
 
-all:
-	clang --version
-	clang ${FLAGS} ${INCLUDE} -D __debug ${SRC} -o md5
+BUILD_ROOT	=	buildsystem
+BUILD_DIR	=	build
 
-release:
-	clang ${FLAGS} ${INCLUDE} ${SRC} -o md5
+TARGETS		=
+
+include ${BUILD_ROOT}/build.mk
+
+include ${BUILD_ROOT}/md5_run.mk
+include ${BUILD_ROOT}/sha224_run.mk
+include ${BUILD_ROOT}/sha256_run.mk
+include ${BUILD_ROOT}/sha384_run.mk
+include ${BUILD_ROOT}/sha512_run.mk
+
+build_targets: ${BUILD_DIR} $(addprefix __build_,$(TARGETS))
 
