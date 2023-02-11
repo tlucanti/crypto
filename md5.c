@@ -7,10 +7,10 @@
 #define PADDING_BYTE    0x80
 
 #define __debug_chunk(__round_num, ti) do {                                     \
-    dprintf("%u %2u (%10u %10u %10u %10u)\n", __round_num - 1, i,               \
+    Dprintf("%u %2u (%10u %10u %10u %10u)\n", __round_num - 1, i,               \
         hash->as_32vec[0], hash->as_32vec[1],                                   \
         hash->as_32vec[2], hash->as_32vec[3]);                                  \
-    dprintf("K(%u) S(%u) I(%u) T(%u) X(%u)\n",                                  \
+    Dprintf("K(%u) S(%u) I(%u) T(%u) X(%u)\n",                                  \
         K##__round_num[i], S##__round_num[i], ti, T[ti],                        \
         chunk->as_32vec[K##__round_num[i]]);                                    \
 } while (false)
@@ -83,7 +83,7 @@ static void md5_step(chunk_t *__restrict chunk, hash_t *__restrict hash)
     for (unsigned short i = 0; i < STAGE_NUM; ++i) {
         ROUND(4, i + HASH_LEN_BYTES * 3);
     }
-    dprintf("(%u, %u, %u, %u)\n",
+    Dprintf("(%u, %u, %u, %u)\n",
         hash->as_32vec[0], hash->as_32vec[1],
         hash->as_32vec[2], hash->as_32vec[3]);
 }
@@ -128,7 +128,7 @@ const unsigned char *md5(const char *__restrict message, size_t len)
         md5_step(&chunk, &hash);
         _mm_iadd_32x4(result.as_32vec, hash.as_32vec);
     }
-    dprintf("[%u %u %u %u]\n",
+    Dprintf("[%u %u %u %u]\n",
         result.as_32vec[0], result.as_32vec[1],
         result.as_32vec[2], result.as_32vec[3]);
     return result.as_str;

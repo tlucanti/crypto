@@ -8,7 +8,7 @@ define build_executable
 TARGETS += $(2)
 
 ${BUILD_DIR}/%.o: %.c
-	$(CC) $(CFAGS) $(3) -c $$^ -o $$@
+	$(CC) $(CFLAGS) $(3) -c $$^ -o $$@
 
 $(addprefix __build_,$(2)): $(addprefix ${BUILD_DIR}/,$(addsuffix .o,$(1)))
 	$(CC) $(CFLAGS) \
@@ -21,9 +21,9 @@ $(2): $(addprefix __build_,$(2))
 endef
 
 define clean_target
-$(addprefix $(2),_clean): Makefile
-	rm -f $(addprefix $(1),.o)
-	rm -f $(2)
+$(addprefix __clean_,$(2)): Makefile
+	rm -f $(addprefix ${BUILD_DIR}/,$(addsuffix .o,$(1)))
+	rm -f $(addprefix ${BUILD_DIR}/,$(2))
 endef
 
 ${BUILD_DIR}:

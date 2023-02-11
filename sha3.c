@@ -3,14 +3,14 @@
 #include <sha3_common.h>
 
 #define __debug_chunk(__r, __name, __chk) do {      \
-    dprintf("%u:%s ----------", __r, __name);       \
+    Dprintf("%u:%s ----------", __r, __name);       \
     for (int __i = 0; __i < 25; ++__i) {            \
         if (__i % 5 == 0) {                         \
-            dprintf("\n");                          \
+            Dprintf("\n");                          \
         }                                           \
-        dprintf(" %20llu", (__chk)->as_64vec[__i]); \
+        Dprintf(" %20llu", (__chk)->as_64vec[__i]); \
     }                                               \
-    dprintf("\n");                                  \
+    Dprintf("\n");                                  \
 } while (false)
 
 typedef unsigned long long ptr_t;
@@ -115,7 +115,6 @@ const unsigned char *sha3(const char *message,
     unsigned short remaining;
 
     /* absorbtion */
-    PANIC_ON(c + r != 200);
     memset(chunk.ptr, 0, 200);
     while (iter--) {
         for (int i = 0; i < (r * 8); ++i) {
@@ -129,11 +128,12 @@ const unsigned char *sha3(const char *message,
     for (int i = 0; i < remaining; ++i) {
         chunk.as_8vec[i] ^= message[offset + i];
     }
-    chunk.as_8vec[remaining] ^= 0x6;
-    if (remaining == (r * 8) - 1) {
-        chunk.as_8vec[r * 8 - 1] |= ~message[offset + remaining] & 0x80;
+#define UNLIKELY(x) x
+    if (UNLIKELY(remaining == r * 8 - 1)) {
+        chunk.as_8vec[r * 8 - 1] ^= 0x06 | 0x80;
     } else {
-        chunk.as_8vec[r * 8 - 1] |= 0x80;
+        chunk.as_8vec[remaining] ^= 0x6;
+        chunk.as_8vec[r * 8 - 1] ^= 0x80;
     }
     __debug_chunk(0, "start", &chunk);
     keccakF(&chunk);

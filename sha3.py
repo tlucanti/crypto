@@ -1,18 +1,16 @@
 
-VERBOSE = False
+Dprint = print
+
+def prt(r, name, a):
+    Dprint(f'{r}:{name} ----------', end='')
+    for i in range(25):
+        if (i % 5 == 0):
+            Dprint()
+        Dprint(f" {a[i]:20}", end='')
+    Dprint()
 
 def ROTL64(_v, i):
     return ((_v << i) & 0xffffffffffffffff) | (_v >> (64 - i))
-
-def prt(r, name, a):
-    if not VERBOSE:
-        return
-    print(f'{r}:{name} ----------', end='')
-    for i in range(25):
-        if (i % 5 == 0):
-            print()
-        print(f" {a[i]:20}", end='')
-    print()
 
 def mod5(x):
     return x % 5
@@ -103,10 +101,13 @@ def sha3(msg, r, c, d):
     # stage 1
     # padding
     msg = bytearray(msg, 'ascii')
-    msg.append(0x06)
-    while len(msg) % r != 0:
-        msg.append(0x0)
-    msg[-1] |= 0x80
+    if len(msg) % r == r - 1:
+        msg.append(0x06 | 0x80)
+    else:
+        msg.append(0x06)
+        while len(msg) % r != r - 1:
+            msg.append(0x0)
+        msg.append(0x80)
 
     # stage 2
     # absorbtion
@@ -117,7 +118,7 @@ def sha3(msg, r, c, d):
             try:
                 S[i] ^= msg[block + i]
             except Exception as e:
-                print(f' len({len(msg)}), block({block}),  r({r}), i({i}), I({block * r + i}), {msg}')
+                Dprint(f' len({len(msg)}), block({block}),  r({r}), i({i}), I({block * r + i}), {msg}')
                 raise e
         S = long2byte(permutate(byte2long(S), l))
 
@@ -150,5 +151,6 @@ def sha512(msg):
 
 if __name__ == '__main__':
     VERBOSE = True
+    print(sha256('123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345'))
     print(sha256('1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456'))
 

@@ -9,15 +9,15 @@
 
 # ifdef __verbose
 #  include <stdio.h>
-#  define dprintf(...) printf(__VA_ARGS__)
+#  define Dprintf(...) printf(__VA_ARGS__)
 # else /* no verbose */
-#  define dprintf(...) /* empty */
+#  define Dprintf(...) /* empty */
 # endif /* __verbose */
 
 # ifdef __debug
 #  include <stdio.h>
 #  define PANIC_ON(__expr) do {                                     \
-    if ((__expr) == 0) {                                            \
+    if (!!(__expr)) {                                               \
         printf("PANIC ON %s:%d\n", __FILE__, __LINE__);             \
         abort();                                                    \
     }                                                               \

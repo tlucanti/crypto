@@ -5,6 +5,8 @@ import string
 import random
 import sha3
 
+sha3.Dprint = lambda *args, **kwargs: None
+
 class CHECKER():
     def __init__(self, name, exe):
         self.name = name
@@ -17,6 +19,7 @@ class CHECKER():
         return self._lib_hash(x.encode('ascii')).hexdigest()
 
     def my_hash(self, x):
+        #return sha3.sha256(x)
         proc = subprocess.run([f'./build/{self._my_hash}.elf', x], capture_output=True, check=True)
         return proc.stdout.decode('ascii').strip()
 
