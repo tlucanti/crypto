@@ -65,10 +65,18 @@ static void keccakF(chunk_t *chunk)
 
     for (unsigned short round = 0; round < KECCAK_ROUND_NUM; ++round) {
         /* theta */
-        for (int i = 0; i < 5; ++i) {
-            BC[i] = chunk->as_64vec[i] ^ chunk->as_64vec[i + 5] ^
-                    chunk->as_64vec[i + 10] ^ chunk->as_64vec[i + 15] ^
-                    chunk->as_64vec[i + 20];
+        //for (int i = 0; i < 5; ++i) {
+        //    BC[i] = chunk->as_64vec[i] ^ chunk->as_64vec[i + 5] ^
+        //            chunk->as_64vec[i + 10] ^ chunk->as_64vec[i + 15] ^
+        //            chunk->as_64vec[i + 20];
+        //}
+        memset(BC, 0, 5 * 8);
+        for (int i = 0; i < 25; i += 5) {
+            BC[0] ^= chunk->as_64vec[i + 0];
+            BC[1] ^= chunk->as_64vec[i + 1];
+            BC[2] ^= chunk->as_64vec[i + 2];
+            BC[3] ^= chunk->as_64vec[i + 3];
+            BC[4] ^= chunk->as_64vec[i + 4];
         }
         for (int i = 0; i < 5; ++i) {
             const uint64_t temp = BC[MOD5(i + 4)] ^ _roll_l64(BC[MOD5(i + 1)], 1);
@@ -128,7 +136,6 @@ const unsigned char *sha3(const char *message,
     for (int i = 0; i < remaining; ++i) {
         chunk.as_8vec[i] ^= message[offset + i];
     }
-#define UNLIKELY(x) x
     if (UNLIKELY(remaining == r * 8 - 1)) {
         chunk.as_8vec[r * 8 - 1] ^= 0x06 | 0x80;
     } else {
