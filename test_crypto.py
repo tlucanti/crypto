@@ -88,7 +88,7 @@ def main():
         print('===================')
         checker = Checker()
         case = ''
-        for i in range(1, 512 + 1):
+        for i in range(1, 1024 + 1):
             case += str(i % 10)
             checker.check(case)
         print(f'{checker.name} simple tests OK')

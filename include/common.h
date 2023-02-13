@@ -39,9 +39,11 @@
 #  include <immintrin.h>
 #  include <x86intrin.h>
 #  define ___mm_iadd_32x4_impl(__a, __b) ___mm_iadd_32x4_impl_x86(__a, __b)
+#  define ___mm_ixor_64x5_impl(__a, __b) ___mm_ixor_64x5_impl_no_x86(__a, __b)
 #  define ___mm_ixor_64x8_impl(__a, __b) ___mm_ixor_64x8_impl_no_x86(__a, __b)
 # else /* not x86 */
 #  define ___mm_iadd_32x4_impl(__a, __b) ___mm_iadd_32x4_impl_no_x86(__a, __b)
+#  define ___mm_ixor_64x5_impl(__a, __b) ___mm_ixor_64x5_impl_no_x86(__a, __b)
 #  define ___mm_ixor_64x8_impl(__a, __b) ___mm_ixor_64x8_impl_no_x86(__a, __b)
 # endif
 
@@ -54,7 +56,7 @@
 # endif
 
 # define ___x4_access_ofs(__x, __ofs)                                       \
-    __x[0 + __ofs], __x[1 + __ofs], __x[2 + __ofs], __[3 + __ofs]
+    __x[0 + __ofs], __x[1 + __ofs], __x[2 + __ofs], __x[3 + __ofs]
 # define ___x8_access_ofs(__x, __ofs)                                       \
     ___x4_access_ofs(__x, 0 + __ofs), ___x4_access_ofs(__x, 1 + __ofs),     \
     ___x4_access_ofs(__x, 2 + __ofs), ___x4_access_ofs(__x, 3 + __ofs)
@@ -80,23 +82,25 @@
     __a[3] += __b[3];                                               \
 } while (false)
 
-# define ___mm_ixor_64x8_impl_x86(__a, __b) do {                    \
-    __m512i __v1 = _mm512_set_epi64(__x8_array_access(__a));        \
-    __m512i __v2 = _mm512_set_epi64(__x8_array_access(__b));        \
-    __v2 = _mm512_xor_epi64(__v1, __v2);                            \
-    _mm512_store_epi64((__m512i *)__a, __v2);                       \
+# define ___mm_ixor_64x5_impl_x86(__a, __b) do {                    \
+    __m256i __v1 = _mm256_set_epi64(__x4_array_access(__a));        \
+    __m256i __v2 = _mm256_set_epi64(__x4_array_access(__b));        \
+    __v2 = _mm256_xor_epi64(__v1, __v2);                            \
+    _mm512_store_epi64((__m256i *)__a, __v2);                       \
+    __a[4] ^= __b[4];                                               \
 } while (false)
 
-# define ___mm_ixor_64x8_imp_no_x86(__a, __b) do {                  \
+# define ___mm_ixor_64x5_impl_no_x86(__a, __b) do {                 \
     __a[0] ^= __b[0];                                               \
     __a[1] ^= __b[1];                                               \
     __a[2] ^= __b[2];                                               \
     __a[3] ^= __b[3];                                               \
     __a[4] ^= __b[4];                                               \
-    __a[5] ^= __b[5];                                               \
-    __a[6] ^= __b[6];                                               \
-    __a[7] ^= __b[7];                                               \
 } while (false)
+
+# define ___mm_ixor_64x8_impl_x86(__a, __b) do {
+
+}
 
 # define ___roll_l32_impl_builtin(__x, __s) __rold(__x, __s)
 # define ___roll_l32_impl_rough(__x, __s) ((__x) << (__s) | (__x) >> (32 - (__s)))
@@ -108,10 +112,10 @@ static inline void _mm_iadd_32x4(uint32_t __a[static 4],
     ___mm_iadd_32x4_impl(__a, __b);
 }
 
-static inline void _mm_ixor_64x8(uint64_t __a[static 16],
-                                  const uint64_t __b[static 16])
+static inline void _mm_ixor_64x5(uint64_t __a[static 8],
+                                  const uint64_t __b[static 8])
 {
-    ___mm_ixor_32x16_impl(__a, __b);
+    ___mm_ixor_64x5_impl(__a, __b);
 }
 
 static inline uint32_t _roll_l32(uint32_t __x, unsigned short __s)

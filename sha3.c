@@ -59,31 +59,32 @@ static void keccakF(chunk_t *chunk)
         0x8000000080008081, 0x8000000000008080,
         0x0000000080000001, 0x8000000080008008,
     };
-    uint64_t BC[5];
+    uint64_t BC[8];
+    uint64_t temp[8];
 
 # define KECCAK_ROUND_NUM 24
 
     for (unsigned short round = 0; round < KECCAK_ROUND_NUM; ++round) {
         /* theta */
-        //for (int i = 0; i < 5; ++i) {
-        //    BC[i] = chunk->as_64vec[i] ^ chunk->as_64vec[i + 5] ^
-        //            chunk->as_64vec[i + 10] ^ chunk->as_64vec[i + 15] ^
-        //            chunk->as_64vec[i + 20];
-        //}
+
         memset(BC, 0, 5 * 8);
-        for (int i = 0; i < 25; i += 5) {
-            BC[0] ^= chunk->as_64vec[i + 0];
-            BC[1] ^= chunk->as_64vec[i + 1];
-            BC[2] ^= chunk->as_64vec[i + 2];
-            BC[3] ^= chunk->as_64vec[i + 3];
-            BC[4] ^= chunk->as_64vec[i + 4];
-        }
-        for (int i = 0; i < 5; ++i) {
-            const uint64_t temp = BC[MOD5(i + 4)] ^ _roll_l64(BC[MOD5(i + 1)], 1);
-            for (int j = 0; j < 25; j += 5) {
-                chunk->as_64vec[i + j] ^= temp;
-            }
-        }
+        _mm_ixor_64x5(BC, chunk->as_64vec +  0);
+        _mm_ixor_64x5(BC, chunk->as_64vec +  5);
+        _mm_ixor_64x5(BC, chunk->as_64vec + 10);
+        _mm_ixor_64x5(BC, chunk->as_64vec + 15);
+        _mm_ixor_64x5(BC, chunk->as_64vec + 20);
+
+        temp[0] = BC[MOD5(0 + 4)] ^ _roll_l64(BC[MOD5(0 + 1)], 1);
+        temp[1] = BC[MOD5(1 + 4)] ^ _roll_l64(BC[MOD5(1 + 1)], 1);
+        temp[2] = BC[MOD5(2 + 4)] ^ _roll_l64(BC[MOD5(2 + 1)], 1);
+        temp[3] = BC[MOD5(3 + 4)] ^ _roll_l64(BC[MOD5(3 + 1)], 1);
+        temp[4] = BC[MOD5(4 + 4)] ^ _roll_l64(BC[MOD5(4 + 1)], 1);
+
+        _mm_ixor_64x5(chunk->as_64vec +  0, temp);
+        _mm_ixor_64x5(chunk->as_64vec +  5, temp);
+        _mm_ixor_64x5(chunk->as_64vec + 10, temp);
+        _mm_ixor_64x5(chunk->as_64vec + 15, temp);
+        _mm_ixor_64x5(chunk->as_64vec + 20, temp);
         __debug_chunk(round, "theta", chunk);
 
         /* rho + pi */
@@ -121,12 +122,18 @@ const unsigned char *sha3(const char *message,
     size_t iter = len / (r * 8);
     size_t offset = 0;
     unsigned short remaining;
+    int ii = 0;
 
     /* absorbtion */
     memset(chunk.ptr, 0, 200);
     while (iter--) {
+        /*
         for (int i = 0; i < (r * 8); ++i) {
             chunk.as_8vec[i] ^= message[offset + i];
+        }
+        */
+        for (int i = 0; i < (r * 8); i += 8) {
+            _mm_ixor_64x8(chunk->as_64vec + i, message + offset + i);
         }
         offset += (r * 8);
         __debug_chunk(0, "start", &chunk);

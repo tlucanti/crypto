@@ -9,7 +9,7 @@ TARGETS		=
 
 include ${BUILD_ROOT}/build.mk
 
-include ${BUILD_ROOT}/md5_run.mk
+#include ${BUILD_ROOT}/md5_run.mk
 include ${BUILD_ROOT}/sha224_run.mk
 include ${BUILD_ROOT}/sha256_run.mk
 include ${BUILD_ROOT}/sha384_run.mk
