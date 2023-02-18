@@ -3,8 +3,8 @@ build
 *.swp
 *.swo
 a.out*
-md5*
 *.o
 *.gch
 __pycache__
 .idea
+*.dSYM

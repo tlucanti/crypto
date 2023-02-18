@@ -120,29 +120,22 @@ const unsigned char *sha3(const char *message,
     static chunk_t chunk;
     static hash_t result;
     size_t iter = len / (r * 8);
-    size_t offset = 0;
     unsigned short remaining;
-    int ii = 0;
 
     /* absorbtion */
     memset(chunk.ptr, 0, 200);
     while (iter--) {
-        /*
-        for (int i = 0; i < (r * 8); ++i) {
-            chunk.as_8vec[i] ^= message[offset + i];
+        _mm_ixor_64x8(chunk.as_64vec, (const void *)message);
+        message += 64;
+        for (int i = 8; i < r; ++i) {
+            chunk.as_64vec[i] ^= *(uint64_t *)message;
+            message += 8;
         }
-        */
-        for (int i = 0; i < (r * 8); i += 8) {
-            _mm_ixor_64x8(chunk->as_64vec + i, message + offset + i);
-        }
-        offset += (r * 8);
         __debug_chunk(0, "start", &chunk);
         keccakF(&chunk);
     }
     remaining = len % (r * 8);
-    for (int i = 0; i < remaining; ++i) {
-        chunk.as_8vec[i] ^= message[offset + i];
-    }
+    memixor(chunk.as_64vec, message, len % (r * 8));
     if (UNLIKELY(remaining == r * 8 - 1)) {
         chunk.as_8vec[r * 8 - 1] ^= 0x06 | 0x80;
     } else {
