@@ -82,7 +82,7 @@ class SHA512_checker(SHA3_checker):
 
 def main():
     checkers = [MD5_checker, SHA224_checker, SHA256_checker, SHA384_checker, SHA512_checker]
-    checkers = [SHA256_checker, SHA224_checker, SHA512_checker]
+    #checkers = [SHA256_checker, SHA224_checker, SHA512_checker]
 
     for Checker in checkers:
         print('===================')
