@@ -2,10 +2,8 @@
 build
 *.swp
 *.swo
-a.out*
 *.o
 *.gch
 __pycache__
 .idea
 *.dSYM
-md5
