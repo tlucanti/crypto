@@ -1,4 +1,5 @@
 
+#include <crypto.h>
 #include <common.h>
 #include <sha3_common.h>
 
@@ -60,7 +61,8 @@ static void keccakF(chunk_t *chunk)
         0x0000000080000001, 0x8000000080008008,
     };
     uint64_t BC[8];
-    uint64_t temp[8];
+    uint64_t theta_temp[5];
+    uint64_t temp;
 
 # define KECCAK_ROUND_NUM 24
 
@@ -74,21 +76,21 @@ static void keccakF(chunk_t *chunk)
         _mm_ixor_64x5(BC, chunk->as_64vec + 15);
         _mm_ixor_64x5(BC, chunk->as_64vec + 20);
 
-        temp[0] = BC[MOD5(0 + 4)] ^ _roll_l64(BC[MOD5(0 + 1)], 1);
-        temp[1] = BC[MOD5(1 + 4)] ^ _roll_l64(BC[MOD5(1 + 1)], 1);
-        temp[2] = BC[MOD5(2 + 4)] ^ _roll_l64(BC[MOD5(2 + 1)], 1);
-        temp[3] = BC[MOD5(3 + 4)] ^ _roll_l64(BC[MOD5(3 + 1)], 1);
-        temp[4] = BC[MOD5(4 + 4)] ^ _roll_l64(BC[MOD5(4 + 1)], 1);
+        theta_temp[0] = BC[MOD5(0 + 4)] ^ _roll_l64(BC[MOD5(0 + 1)], 1);
+        theta_temp[1] = BC[MOD5(1 + 4)] ^ _roll_l64(BC[MOD5(1 + 1)], 1);
+        theta_temp[2] = BC[MOD5(2 + 4)] ^ _roll_l64(BC[MOD5(2 + 1)], 1);
+        theta_temp[3] = BC[MOD5(3 + 4)] ^ _roll_l64(BC[MOD5(3 + 1)], 1);
+        theta_temp[4] = BC[MOD5(4 + 4)] ^ _roll_l64(BC[MOD5(4 + 1)], 1);
 
-        _mm_ixor_64x5(chunk->as_64vec +  0, temp);
-        _mm_ixor_64x5(chunk->as_64vec +  5, temp);
-        _mm_ixor_64x5(chunk->as_64vec + 10, temp);
-        _mm_ixor_64x5(chunk->as_64vec + 15, temp);
-        _mm_ixor_64x5(chunk->as_64vec + 20, temp);
+        _mm_ixor_64x5(chunk->as_64vec +  0, theta_temp);
+        _mm_ixor_64x5(chunk->as_64vec +  5, theta_temp);
+        _mm_ixor_64x5(chunk->as_64vec + 10, theta_temp);
+        _mm_ixor_64x5(chunk->as_64vec + 15, theta_temp);
+        _mm_ixor_64x5(chunk->as_64vec + 20, theta_temp);
         __debug_chunk(round, "theta", chunk);
 
         /* rho + pi */
-        uint64_t temp = chunk->as_64vec[1];
+        temp = chunk->as_64vec[1];
         for (int i = 0; i < 24; ++i) {
             const unsigned short perm = perm_values[i];
             const uint64_t save = chunk->as_64vec[perm];
@@ -112,7 +114,7 @@ static void keccakF(chunk_t *chunk)
     }
 }
 
-const unsigned char *sha3(const char *message,
+const unsigned char *sha3(const char *message_ptr,
                           const size_t len,
                           const unsigned short r,
                           const unsigned short d)
@@ -121,6 +123,9 @@ const unsigned char *sha3(const char *message,
     static hash_t result;
     size_t iter = len / (r * 8);
     unsigned short remaining;
+    const uintptr_t *message = (const void *)message_ptr;
+
+    PANIC_ON(! IS_ALIGNED_8(message_ptr));
 
     /* absorbtion */
     memset(chunk.ptr, 0, 200);
@@ -128,14 +133,14 @@ const unsigned char *sha3(const char *message,
         _mm_ixor_64x8(chunk.as_64vec, (const void *)message);
         message += 64;
         for (int i = 8; i < r; ++i) {
-            chunk.as_64vec[i] ^= *(uint64_t *)message;
+            chunk.as_64vec[i] ^= LOAD_64(message);
             message += 8;
         }
         __debug_chunk(0, "start", &chunk);
         keccakF(&chunk);
     }
     remaining = len % (r * 8);
-    memixor(chunk.as_64vec, message, len % (r * 8));
+    memxor(chunk.as_64vec, chunk.as_64vec, message, len % (r * 8));
     if (UNLIKELY(remaining == r * 8 - 1)) {
         chunk.as_8vec[r * 8 - 1] ^= 0x06 | 0x80;
     } else {
@@ -172,10 +177,10 @@ const unsigned char *sha3_512(const char *message, size_t len)
 
 const char *sha3_hexdigest(const unsigned char *hash, size_t len)
 {
-    PANIC_ON(len != 224 && len != 256 && len != 384 && len != 512);
-
     static char hex[129];
     static const char *alphabet = "0123456789abcdef";
+
+    PANIC_ON(len != 224 && len != 256 && len != 384 && len != 512);
 
     len /= 8;
     for (unsigned short i = 0; i < len; ++i) {

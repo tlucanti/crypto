@@ -26,14 +26,29 @@
 #  define PANIC_ON(__expr) /* empty */
 # endif /* __debug */
 
-# define ATTRIBUTE(__attr)  __attribute__((__attr))
-# define ALIGNED(__size)    ATTRIBUTE(__aligned__(__size))
-# define ALIGNED_8          ALIGNED(8)
-# define ALIGNED_16         ALIGNED(16)
-# define ALIGNED_PTR        ALIGNED(sizeof(void *))
+# define ATTRIBUTE(__attr)          __attribute__((__attr))
+# define ALIGNED(__size)            ATTRIBUTE(__aligned__(__size))
+# define ALIGNED_8                  ALIGNED(8)
+# define ALIGNED_16                 ALIGNED(16)
+# define ALIGNED_PTR                ALIGNED(sizeof(void *))
 
-# define UNLIKELY(__expr)   __builtin_expect(__expr, 0)
-# define LIKELY(__expr)     __builtin_expect(__expr, 1)
+# define IS_ALIGNED_8(__ptr)        (((uint64_t)(__ptr) & 0x7) == 0)
+# define IS_ALIGNED_16(__ptr)       (((uint64_t)(__ptr) & 0xF) == 0)
+# define IS_ALIGNED_32(__ptr)       (((uint64_t)(__ptr) & 0x1F) == 0)
+# define IS_ALIGNED_64(__ptr)       (((uint64_t)(__ptr) & 0x3F) == 0)
+
+# define LOAD_8(__ptr)              (*(const uint8_t *)(__ptr))
+# define LOAD_16(__ptr)             (*(const uint16_t *)(__ptr))
+# define LOAD_32(__ptr)             (*(const uint32_t *)(__ptr))
+# define LOAD_64(__ptr)             (*(const uint64_t *)(__ptr))
+
+# define STORE_8(__ptr, __value)    (*(uint8_t *)(__ptr) = __value)
+# define STORE_16(__ptr, __value)   (*(uint16_t *)(__ptr) = __value)
+# define STORE_32(__ptr, __value)   (*(uint32_t *)(__ptr) = __value)
+# define STORE_64(__ptr, __value)   (*(uint64_t *)(__ptr) = __value)
+
+# define UNLIKELY(__expr)           __builtin_expect(__expr, 0)
+# define LIKELY(__expr)             __builtin_expect(__expr, 1)
 
 # if defined(__x86_64__) || defined(__i386)
 #  include <immintrin.h>
@@ -69,8 +84,8 @@
 # define __x16_array_access(__x) __x16_access_ofs(__x, 0)
 
 # define ___mm_iadd_32x4_impl_x86(__a, __b) do {                    \
-    __m128i __v1 = _mm_set_epi32(__x4_array_access(__a));           \
-    __m128i __v2 = _mm_set_epi32(__x4_array_access(__b));           \
+    __m128i __v1 = _mm_set_epi64(__x4_array_access(__a));           \
+    __m128i __v2 = _mm_set_epi64(__x4_array_access(__b));           \
     __v2 = _mm_add_epi32(__v1, __v2);                               \
     _mm_store_si128((__m128i *)__a, __v2);                          \
 } while (false)
@@ -123,18 +138,28 @@
 static inline void _mm_iadd_32x4(uint32_t __a[static 4],
                                  const uint32_t __b[static 4])
 {
-    ___mm_iadd_32x4_impl(__a, __b);
+    PANIC_ON(! IS_ALIGNED_16(__a));
+    PANIC_ON(! IS_ALIGNED_16(__b));
+
+    //___mm_iadd_32x4_impl(__a, __b);
+    ___mm_iadd_32x4_impl_no_x86(__a, __b);
 }
 
 static inline void _mm_ixor_64x5(uint64_t __a[static 5],
                                   const uint64_t __b[static 5])
 {
+    PANIC_ON(! IS_ALIGNED_16(__a));
+    PANIC_ON(! IS_ALIGNED_16(__b));
+
     ___mm_ixor_64x5_impl(__a, __b);
 }
 
 static inline void _mm_ixor_64x8(uint64_t __a[static 8],
                                  const uint64_t __b[static 8])
 {
+    PANIC_ON(! IS_ALIGNED_16(__a));
+    PANIC_ON(! IS_ALIGNED_16(__b));
+
     ___mm_ixor_64x8_impl_no_x86(__a, __b);
     //___mm_ixor_64x8_impl(__a, __b);
 }
@@ -149,29 +174,29 @@ static inline uint64_t _roll_l64(uint64_t __x, unsigned short __s)
     return ___roll_l64_impl(__x, __s);
 }
 
-static inline void memixor(void *left, const void *right, size_t size)
+static inline void memxor(void *dest_ptr,
+                          const void *src1_ptr,
+                          const void *src2_ptr,
+                          size_t size)
 {
-    size_t xlen;
-    uint64_t *left_64;
-    const uint64_t *right_64;
-    uint8_t *left_8;
-    const uint8_t *right_8;
+    uintptr_t dest, src1, src2;
 
-    xlen = size / 8;
-    size = size % 8;
-    left_64 = left;
-    right_64 = right;
-    while (xlen--) {
-        *left_64 ^= *right_64;
-        ++left_64;
-        ++right_64;
+    dest = (uintptr_t)dest_ptr;
+    src1 = (uintptr_t)src1_ptr;
+    src2 = (uintptr_t)src2_ptr;
+    while (size >= 8) {
+        STORE_64(dest, LOAD_64(src1) ^ LOAD_64(src2));
+        src1 += 8;
+        src2 += 8;
+        dest += 8;
+        size -= 8;
     }
-    left_8 = (uint8_t *)left_64;
-    right_8 = (const uint8_t *)right_64;
-    while (size--) {
-        *left_8 ^= *right_8;
-        ++left_8;
-        ++right_8;
+    while (size) {
+        STORE_8(dest, LOAD_8(src1) ^ LOAD_8(src2));
+        src1 += 1;
+        src2 += 1;
+        dest += 1;
+        --size;
     }
 }
 

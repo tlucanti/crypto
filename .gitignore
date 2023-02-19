@@ -8,3 +8,4 @@ a.out*
 __pycache__
 .idea
 *.dSYM
+md5
