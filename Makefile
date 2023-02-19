@@ -1,5 +1,6 @@
 
-CFLAGS		=	-Wall -Wextra -Wmost -Wpedantic  -D __debug -O0 -g3
+CFLAGS		=	-Wall -Wextra -Wmost -Wpedantic
+CFLAGE		+=	-D__debug -O0 -g3
 CC			=	clang
 LD			=	clang
 RM			=	rm -f

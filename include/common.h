@@ -9,21 +9,22 @@
 
 # ifdef __verbose
 #  include <stdio.h>
-#  define Dprintf(...) printf(__VA_ARGS__)
+#  define __debug_print printf
 # else /* no verbose */
-#  define Dprintf(...) /* empty */
+#  define __debug_print(...) /* empty */
 # endif /* __verbose */
 
 # ifdef __debug
 #  include <stdio.h>
-#  define PANIC_ON(__expr) do {                                     \
+#  define PANIC_ON(__expr, __message) do {                          \
     if (!!(__expr)) {                                               \
         printf("PANIC ON %s:%d\n", __FILE__, __LINE__);             \
+        printf("reason: %s\n", __message);                          \
         abort();                                                    \
     }                                                               \
 } while (false)
 # else /* no debug */
-#  define PANIC_ON(__expr) /* empty */
+#  define PANIC_ON(__expr, __message) /* empty */
 # endif /* __debug */
 
 # define ATTRIBUTE(__attr)          __attribute__((__attr))
@@ -138,8 +139,10 @@
 static inline void _mm_iadd_32x4(uint32_t __a[static 4],
                                  const uint32_t __b[static 4])
 {
-    PANIC_ON(! IS_ALIGNED_16(__a));
-    PANIC_ON(! IS_ALIGNED_16(__b));
+    PANIC_ON(! IS_ALIGNED_16(__a),
+            "first argument shoud be aligned to 16 bytes");
+    PANIC_ON(! IS_ALIGNED_16(__b),
+            "second argument should be aligned to 16 bytes");
 
     //___mm_iadd_32x4_impl(__a, __b);
     ___mm_iadd_32x4_impl_no_x86(__a, __b);
@@ -148,8 +151,10 @@ static inline void _mm_iadd_32x4(uint32_t __a[static 4],
 static inline void _mm_ixor_64x5(uint64_t __a[static 5],
                                   const uint64_t __b[static 5])
 {
-    PANIC_ON(! IS_ALIGNED_16(__a));
-    PANIC_ON(! IS_ALIGNED_16(__b));
+    PANIC_ON(! IS_ALIGNED_16(__a),
+            "first argument shoud be aligned to 16 bytes");
+    PANIC_ON(! IS_ALIGNED_16(__b),
+            "second argument should be aligned to 16 bytes");
 
     ___mm_ixor_64x5_impl(__a, __b);
 }
@@ -157,8 +162,10 @@ static inline void _mm_ixor_64x5(uint64_t __a[static 5],
 static inline void _mm_ixor_64x8(uint64_t __a[static 8],
                                  const uint64_t __b[static 8])
 {
-    PANIC_ON(! IS_ALIGNED_16(__a));
-    PANIC_ON(! IS_ALIGNED_16(__b));
+    PANIC_ON(! IS_ALIGNED_16(__a),
+            "first argument shoud be aligned to 16 bytes");
+    PANIC_ON(! IS_ALIGNED_16(__b),
+            "second argument should be aligned to 16 bytes");
 
     ___mm_ixor_64x8_impl_no_x86(__a, __b);
     //___mm_ixor_64x8_impl(__a, __b);

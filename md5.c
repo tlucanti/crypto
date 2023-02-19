@@ -7,13 +7,13 @@
 #define HASH_LEN_BYTES  16
 #define PADDING_BYTE    0x80
 
-#define __debug_chunk(__round_num, ti) do {                                     \
-    Dprintf("%u %2u (%10u %10u %10u %10u)\n", __round_num - 1, i,               \
-        hash->as_32vec[0], hash->as_32vec[1],                                   \
-        hash->as_32vec[2], hash->as_32vec[3]);                                  \
-    Dprintf("K(%u) S(%u) I(%u) T(%u) X(%u)\n",                                  \
-        K##__round_num[i], S##__round_num[i], ti, T[ti],                        \
-        chunk->as_32vec[K##__round_num[i]]);                                    \
+#define __debug_chunk(__round_num, ti) do {                                 \
+    __debug_print("%u %2u (%10u %10u %10u %10u)\n", __round_num - 1, i,     \
+        hash->as_32vec[0], hash->as_32vec[1],                               \
+        hash->as_32vec[2], hash->as_32vec[3]);                              \
+    __debug_print("K(%u) S(%u) I(%u) T(%u) X(%u)\n",                        \
+        K##__round_num[i], S##__round_num[i], ti, T[ti],                    \
+        chunk->as_32vec[K##__round_num[i]]);                                \
 } while (false)
 
 #define fun1(x, y, z) ((x & y) | (~(x) & z))
@@ -21,17 +21,18 @@
 #define fun3(x, y, z) (x ^ y ^ z)
 #define fun4(x, y, z) (y ^ (~(z) | x))
 
-#define ROUND(__round_num, ti) do {                                             \
-    uint32_t fun_val, to_shift, new_b;                                          \
-                                                                                \
-    __debug_chunk(__round_num, ti);                                             \
-    fun_val = fun##__round_num(hash->b, hash->c, hash->d);                      \
-    to_shift = hash->a + fun_val + chunk->as_32vec[K##__round_num[i]] + T[ti];  \
-    new_b = hash->b + _roll_l32(to_shift, S##__round_num[i]);                   \
-    hash->a = hash->d;                                                          \
-    hash->d = hash->c;                                                          \
-    hash->c = hash->b;                                                          \
-    hash->b = new_b;                                                            \
+#define ROUND(__round_num, ti) do {                                         \
+    uint32_t fun_val, to_shift, new_b;                                      \
+                                                                            \
+    __debug_chunk(__round_num, ti);                                         \
+    fun_val = fun##__round_num(hash->b, hash->c, hash->d);                  \
+    to_shift =                                                              \
+        hash->a + fun_val + chunk->as_32vec[K##__round_num[i]] + T[ti];     \
+    new_b = hash->b + _roll_l32(to_shift, S##__round_num[i]);               \
+    hash->a = hash->d;                                                      \
+    hash->d = hash->c;                                                      \
+    hash->c = hash->b;                                                      \
+    hash->b = new_b;                                                        \
 } while (false)
 
 typedef unsigned long long ptr_t;
@@ -84,7 +85,7 @@ static void md5_step(chunk_t *__restrict chunk, hash_t *__restrict hash)
     for (unsigned short i = 0; i < STAGE_NUM; ++i) {
         ROUND(4, i + HASH_LEN_BYTES * 3);
     }
-    Dprintf("(%u, %u, %u, %u)\n",
+    __debug_print("(%u, %u, %u, %u)\n",
         hash->as_32vec[0], hash->as_32vec[1],
         hash->as_32vec[2], hash->as_32vec[3]);
 }
@@ -129,7 +130,7 @@ const unsigned char *md5(const char *__restrict message, size_t len)
         md5_step(&chunk, &hash);
         _mm_iadd_32x4(result.as_32vec, hash.as_32vec);
     }
-    Dprintf("[%u %u %u %u]\n",
+    __debug_print("[%u %u %u %u]\n",
         result.as_32vec[0], result.as_32vec[1],
         result.as_32vec[2], result.as_32vec[3]);
     return result.as_str;
