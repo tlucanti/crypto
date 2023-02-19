@@ -81,8 +81,7 @@ class SHA512_checker(SHA3_checker):
         super().__init__(512)
 
 def main():
-    checkers = [MD5_checker, SHA224_checker, SHA256_checker, SHA384_checker, SHA512_checker]
-    #checkers = [SHA256_checker, SHA224_checker, SHA512_checker]
+    checkers = [SHA224_checker, MD5_checker, SHA256_checker, SHA384_checker, SHA512_checker]
 
     for Checker in checkers:
         print('===================')
@@ -92,7 +91,6 @@ def main():
             case += str(i % 10)
             checker.check(case)
         print(f'{checker.name} simple tests OK')
-        continue
 
         for i in range(10000):
             length = random.randint(0, 55)

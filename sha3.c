@@ -40,7 +40,7 @@ static void keccakF(chunk_t *chunk)
     static const unsigned short rotl_values[24] = SHA3_ROTATION_TABLE;
     static const uint64_t iota_const[24] = SHA3_IOTA_TABLE;
 
-    uint64_t BC[8];
+    uint64_t BC[5];
     uint64_t theta_temp[5];
     uint64_t temp;
 
@@ -82,9 +82,11 @@ static void keccakF(chunk_t *chunk)
         /* chi */
         for (int i = 0; i < CHUNK_LEN_QWORDS; i += 5) {
             memcpy(BC, chunk->as_64vec + i, 40);
-            for (int j = 0; j < 5; ++j) {
-                chunk->as_64vec[i + j] ^= ~BC[MOD5(j + 1)] & BC[MOD5(j + 2)];
-            }
+            chunk->as_64vec[i + 0] ^= ~BC[MOD5(0 + 1)] & BC[MOD5(0 + 2)];
+            chunk->as_64vec[i + 1] ^= ~BC[MOD5(1 + 1)] & BC[MOD5(1 + 2)];
+            chunk->as_64vec[i + 2] ^= ~BC[MOD5(2 + 1)] & BC[MOD5(2 + 2)];
+            chunk->as_64vec[i + 3] ^= ~BC[MOD5(3 + 1)] & BC[MOD5(3 + 2)];
+            chunk->as_64vec[i + 4] ^= ~BC[MOD5(4 + 1)] & BC[MOD5(4 + 2)];
         }
         __debug_chunk(round, "chi", chunk);
 
@@ -94,7 +96,7 @@ static void keccakF(chunk_t *chunk)
     }
 }
 
-const unsigned char *sha3(const char *message_ptr,
+const unsigned char *sha3(const char *message,
                           const size_t len,
                           const unsigned short r,
                           const unsigned short d)
@@ -103,13 +105,9 @@ const unsigned char *sha3(const char *message_ptr,
     static hash_t result;
     size_t iter = len / (r * 8);
     unsigned short remaining;
-    const uintptr_t *message = (const void *)message_ptr;
-
-    PANIC_ON(! IS_ALIGNED_8(message_ptr),
-             "message pointer should be aligned with 8 bytes");
 
     /* absorbtion */
-    memset(chunk.ptr, 0, 200);
+    memset(chunk.ptr, 0, CHUNK_LEN_BYTES);
     while (iter--) {
         _mm_ixor_64x8(chunk.as_64vec, (const void *)message);
         message += 64;
@@ -162,7 +160,7 @@ const char *sha3_hexdigest(const unsigned char *hash, size_t len)
     static const char *alphabet = "0123456789abcdef";
 
     PANIC_ON(len != 224 && len != 256 && len != 384 && len != 512,
-             "SHA3 len argument should be one of 224, 256, 384 or 512");
+            "SHA3 len argument should be one of 224, 256, 384 or 512");
 
     len /= 8;
     for (unsigned short i = 0; i < len; ++i) {

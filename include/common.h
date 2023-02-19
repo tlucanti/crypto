@@ -38,15 +38,15 @@
 # define IS_ALIGNED_32(__ptr)       (((uint64_t)(__ptr) & 0x1F) == 0)
 # define IS_ALIGNED_64(__ptr)       (((uint64_t)(__ptr) & 0x3F) == 0)
 
-# define LOAD_8(__ptr)              (*(const uint8_t *)(__ptr))
-# define LOAD_16(__ptr)             (*(const uint16_t *)(__ptr))
-# define LOAD_32(__ptr)             (*(const uint32_t *)(__ptr))
-# define LOAD_64(__ptr)             (*(const uint64_t *)(__ptr))
+# define LOAD_8(__ptr)              (*(const uint8_t *)(const void *)(__ptr))
+# define LOAD_16(__ptr)             (*(const uint16_t *)(const void *)(__ptr))
+# define LOAD_32(__ptr)             (*(const uint32_t *)(const void *)(__ptr))
+# define LOAD_64(__ptr)             (*(const uint64_t *)(const void *)(__ptr))
 
-# define STORE_8(__ptr, __value)    (*(uint8_t *)(__ptr) = __value)
-# define STORE_16(__ptr, __value)   (*(uint16_t *)(__ptr) = __value)
-# define STORE_32(__ptr, __value)   (*(uint32_t *)(__ptr) = __value)
-# define STORE_64(__ptr, __value)   (*(uint64_t *)(__ptr) = __value)
+# define STORE_8(__ptr, __value)    (*(uint8_t *)(void *)(__ptr) = __value)
+# define STORE_16(__ptr, __value)   (*(uint16_t *)(void *)(__ptr) = __value)
+# define STORE_32(__ptr, __value)   (*(uint32_t *)(void *)(__ptr) = __value)
+# define STORE_64(__ptr, __value)   (*(uint64_t *)(void *)(__ptr) = __value)
 
 # define UNLIKELY(__expr)           __builtin_expect(__expr, 0)
 # define LIKELY(__expr)             __builtin_expect(__expr, 1)
@@ -139,11 +139,6 @@
 static inline void _mm_iadd_32x4(uint32_t __a[static 4],
                                  const uint32_t __b[static 4])
 {
-    PANIC_ON(! IS_ALIGNED_16(__a),
-            "first argument shoud be aligned to 16 bytes");
-    PANIC_ON(! IS_ALIGNED_16(__b),
-            "second argument should be aligned to 16 bytes");
-
     //___mm_iadd_32x4_impl(__a, __b);
     ___mm_iadd_32x4_impl_no_x86(__a, __b);
 }
@@ -151,22 +146,12 @@ static inline void _mm_iadd_32x4(uint32_t __a[static 4],
 static inline void _mm_ixor_64x5(uint64_t __a[static 5],
                                   const uint64_t __b[static 5])
 {
-    PANIC_ON(! IS_ALIGNED_16(__a),
-            "first argument shoud be aligned to 16 bytes");
-    PANIC_ON(! IS_ALIGNED_16(__b),
-            "second argument should be aligned to 16 bytes");
-
     ___mm_ixor_64x5_impl(__a, __b);
 }
 
 static inline void _mm_ixor_64x8(uint64_t __a[static 8],
                                  const uint64_t __b[static 8])
 {
-    PANIC_ON(! IS_ALIGNED_16(__a),
-            "first argument shoud be aligned to 16 bytes");
-    PANIC_ON(! IS_ALIGNED_16(__b),
-            "second argument should be aligned to 16 bytes");
-
     ___mm_ixor_64x8_impl_no_x86(__a, __b);
     //___mm_ixor_64x8_impl(__a, __b);
 }
