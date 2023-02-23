@@ -5,10 +5,23 @@ using namespace std::string_literals;
 
 namespace parser {
 
+bool strcaseeq(const std::string &s1, const std::string &s2)
+{
+    if (s1.size() != s2.size()) {
+        return false;
+    }
+    for (size_t i = 0; i < s1.size(); ++i) {
+        if (std::tolower(s1[i]) != std::tolower(s2[i])) {
+            return false;
+        }
+    }
+    return true;
+}
+
 const HashType *find_hash_type(const std::string &name)
 {
     for (int i = 0; i < array_size(hash_types); ++i) {
-        if (hash_types[i].name == name) {
+        if (parser::strcaseeq(hash_types[i].name, name)) {
             return hash_types + i;
         }
     }
@@ -107,16 +120,20 @@ void argparse(int argc, char **argv, Args &args, std::vector<ArgUnit> &units)
 
 void hash_units(const Args &args, const std::vector<ArgUnit> &units)
 {
-    const char *hash_name;
+    const unsigned char *hash;
+    const char *digest;
+
 
     if (args.p_flag) {
         std::cout << units.front().str << '\n';
     }
     for (const auto &unit : units) {
         if (not args.q_flag and not args.r_flag) {
-            std::cout << hash_name << '(' << unit.source << "): ";
+            std::cout << args.hash_type->name << '(' << unit.source << "): ";
         }
-        std::cout << unit.str;
+        hash = args.hash_type->hash_func(unit.str.c_str(), unit.str.size());
+        digest = args.hash_type->hexdigest(hash);
+        std::cout << digest;
         if (not args.q_flag and args.r_flag) {
             std::cout << ' ' << unit.source;
         }

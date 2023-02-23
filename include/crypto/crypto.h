@@ -9,7 +9,9 @@
 #  define __static static
 # endif
 
+# ifdef __cplusplus
 extern "C" { // }
+# endif
 
 const unsigned char *md5(const char *__restrict message, size_t len);
 const char *md5_hexdigest(const unsigned char hash[__static 16]);
@@ -24,7 +26,9 @@ const char *sha3_256_hexdigest(const unsigned char hash[__static 32]);
 const char *sha3_384_hexdigest(const unsigned char hash[__static 48]);
 const char *sha3_512_hexdigest(const unsigned char hash[__static 64]);
 
+# ifdef __cplusplus
 } /* extern C */
+# endif
 
 #endif /* CRYPTO_H */
 

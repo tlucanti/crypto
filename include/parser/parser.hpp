@@ -6,6 +6,7 @@
 # include <color/color.hpp>
 # include <iostream>
 # include <string>
+# include <cstring>
 # include <vector>
 # include <stdexcept>
 # include <fstream>
