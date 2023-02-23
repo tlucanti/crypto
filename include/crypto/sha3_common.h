@@ -3,7 +3,7 @@
 # define __SHA3_COMMON_H__
 
 
-const unsigned char *sha3(const char *message_ptr,
+const unsigned char *sha3(const char *__restrict message_ptr,
                           const size_t len,
                           const unsigned short r,
                           const unsigned short d);

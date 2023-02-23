@@ -34,7 +34,7 @@ typedef union {
     uint64_t    as_8vec[HASH_LEN_BYTES];
 } ALIGNED_16 hash_t;
 
-static void keccakF(chunk_t *chunk)
+static void keccakF(chunk_t *__restrict chunk)
 {
     static const unsigned short perm_values[24] = SHA3_PERMUTATION_TABLE;
     static const unsigned short rotl_values[24] = SHA3_ROTATION_TABLE;
@@ -96,7 +96,7 @@ static void keccakF(chunk_t *chunk)
     }
 }
 
-const unsigned char *sha3(const char *message,
+const unsigned char *sha3(const char *__restrict message,
                           const size_t len,
                           const unsigned short r,
                           const unsigned short d)
@@ -134,27 +134,27 @@ const unsigned char *sha3(const char *message,
     return chunk.as_8vec;
 }
 
-const unsigned char *sha3_224(const char *message, size_t len)
+const unsigned char *sha3_224(const char *__restrict message, size_t len)
 {
     return sha3(message, len, 18, 28);
 }
 
-const unsigned char *sha3_256(const char *message, size_t len)
+const unsigned char *sha3_256(const char *__restrict message, size_t len)
 {
     return sha3(message, len, 17, 32);
 }
 
-const unsigned char *sha3_384(const char *message, size_t len)
+const unsigned char *sha3_384(const char *__restrict message, size_t len)
 {
     return sha3(message, len, 13, 48);
 }
 
-const unsigned char *sha3_512(const char *message, size_t len)
+const unsigned char *sha3_512(const char *__restrict message, size_t len)
 {
     return sha3(message, len, 9, 64);
 }
 
-const char *sha3_hexdigest(const unsigned char *hash, size_t len)
+const char *sha3_hexdigest(const unsigned char *__restrict hash, size_t len)
 {
     static char hex[129];
     static const char *alphabet = "0123456789abcdef";
@@ -170,3 +170,24 @@ const char *sha3_hexdigest(const unsigned char *hash, size_t len)
     hex[len * 2] = 0;
     return hex;
 }
+
+const char *sha3_224_hexdigest(const unsigned char hash[static 28])
+{
+    return sha3_hexdigest(hash, 224);
+}
+
+const char *sha3_256_hexdigest(const unsigned char hash[static 32])
+{
+    return sha3_hexdigest(hash, 256);
+}
+
+const char *sha3_384_hexdigest(const unsigned char hash[static 48])
+{
+    return sha3_hexdigest(hash, 384);
+}
+
+const char *sha3_512_hexdigest(const unsigned char hash[static 64])
+{
+    return sha3_hexdigest(hash, 512);
+}
+
