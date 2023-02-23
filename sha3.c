@@ -1,7 +1,7 @@
 
-#include <crypto.h>
-#include <common.h>
-#include <sha3_common.h>
+#include <crypto/crypto.h>
+#include <crypto/common.h>
+#include <crypto/sha3_common.h>
 
 #define CHUNK_LEN_BYTES     200
 #define CHUNK_LEN_QWORDS    CHUNK_LEN_BYTES / 8

@@ -1,7 +1,7 @@
 
-#include <crypto.h>
-#include <common.h>
-#include <md5_common.h>
+#include <crypto/crypto.h>
+#include <crypto/common.h>
+#include <crypto/md5_common.h>
 
 #define CHUNK_LEN_BYTES 64
 #define HASH_LEN_BYTES  16

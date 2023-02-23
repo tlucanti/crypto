@@ -85,8 +85,8 @@
 # define __x16_array_access(__x) __x16_access_ofs(__x, 0)
 
 # define ___mm_iadd_32x4_impl_x86(__a, __b) do {                    \
-    __m128i __v1 = _mm_set_epi64(__x4_array_access(__a));           \
-    __m128i __v2 = _mm_set_epi64(__x4_array_access(__b));           \
+    __m128i __v1 = _mm_set_epi32(__x4_array_access(__a));           \
+    __m128i __v2 = _mm_set_epi32(__x4_array_access(__b));           \
     __v2 = _mm_add_epi32(__v1, __v2);                               \
     _mm_store_si128((__m128i *)__a, __v2);                          \
 } while (false)
@@ -139,7 +139,7 @@
 static inline void _mm_iadd_32x4(uint32_t __a[static 4],
                                  const uint32_t __b[static 4])
 {
-    //___mm_iadd_32x4_impl(__a, __b);
+    //___mm_iadd_32x4_impl(a, b);
     ___mm_iadd_32x4_impl_no_x86(__a, __b);
 }
 
