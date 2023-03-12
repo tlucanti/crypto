@@ -11,6 +11,7 @@
 # include <stdexcept>
 # include <fstream>
 # include <sstream>
+# include <limits>
 
 # define array_size(array) (sizeof(array) / sizeof((array)[0]))
 
@@ -43,10 +44,17 @@ inline constexpr HashType hash_types[] = {
 };
 
 namespace parser {
+    bool strcaseeq(const std::string &s1, const std::string &s2);
+    const HashType *find_hash_type(const std::string &name);
     std::string read_file_text(const std::string &fname);
     std::string read_stdin_text();
     void print_help();
-    void argparse(int argc, char **argv, Args &args, std::vector<ArgUnit> &units);
+    void argparse(size_t argc, char **argv);
+    void interactive();
+    void hash_units(const Args &args, const std::vector<ArgUnit> &units);
+
+    template <class args_type>
+    void cli(size_t argc, args_type argv, Args &args, std::vector<ArgUnit> &units);
 }
 
 #endif /* PARSER_HPP */

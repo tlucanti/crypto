@@ -20,7 +20,7 @@ bool strcaseeq(const std::string &s1, const std::string &s2)
 
 const HashType *find_hash_type(const std::string &name)
 {
-    for (int i = 0; i < array_size(hash_types); ++i) {
+    for (size_t i = 0; i < array_size(hash_types); ++i) {
         if (parser::strcaseeq(hash_types[i].name, name)) {
             return hash_types + i;
         }
@@ -65,7 +65,45 @@ void print_help()
     std::cout << "    names of files whos contents will be hashed\n";
 }
 
-void argparse(int argc, char **argv, Args &args, std::vector<ArgUnit> &units)
+void argparse(size_t argc, char **argv)
+{
+    Args args;
+    std::vector<ArgUnit> units;
+
+    if (argc == 0) {
+        parser::interactive();
+    } else {
+        parser::cli(argc, argv, args, units);
+    }
+    parser::hash_units(args, units);
+}
+
+void interactive()
+{
+    while (std::cin) {
+        std::string line;
+        std::getline(std::cin, line, '\n');
+        std::stringstream ss(line);
+        std::vector<std::string> argv(1);
+        while (true) {
+            std::string token;
+            ss >> token;
+            if (token.empty()) {
+                break ;
+            }
+            argv.push_back(token);
+        }
+
+        Args args;
+        std::vector<ArgUnit> units;
+
+        parser::cli(argv.size(), argv, args, units);
+        parser::hash_units(args, units);
+    }
+}
+
+template <class args_type>
+void cli(size_t argc, args_type argv, Args &args, std::vector<ArgUnit> &units)
 {
     args.p_flag = false;
     args.q_flag = false;
@@ -73,11 +111,12 @@ void argparse(int argc, char **argv, Args &args, std::vector<ArgUnit> &units)
     args.ignore_stdin = false;
 
     if (argc == 1) {
-        throw std::invalid_argument("run with --help option");
+        parser::interactive();
+        return ;
     }
     if (argv[1] == "--help"s) {
         parser::print_help();
-        exit(0);
+        return ;
     } else if (argv[1][0] == '-') {
         throw std::invalid_argument(
             "expected hash type for first argument, run with --help option");
@@ -87,7 +126,7 @@ void argparse(int argc, char **argv, Args &args, std::vector<ArgUnit> &units)
         throw std::invalid_argument("unknown hash type: ("s + argv[1]
             + ") run with --help option");
     }
-    for (int i = 2; i < argc; ++i) {
+    for (size_t i = 2; i < argc; ++i) {
         if (argv[i][0] != '-') {
             units.push_back({argv[i], parser::read_file_text(argv[i]), ""});
             args.ignore_stdin = true;
@@ -145,13 +184,9 @@ void hash_units(const Args &args, const std::vector<ArgUnit> &units)
 
 int main(int argc, char **argv)
 {
-    Args args;
-    std::vector<ArgUnit> units;
-
     try {
-        parser::argparse(argc, argv, args, units);
+        parser::argparse(static_cast<size_t>(argc), argv);
     } catch (const std::invalid_argument &exc) {
         std::cout << color::R("Error: ") << exc.what() << '\n';
     }
-    parser::hash_units(args, units);
 }

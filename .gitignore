@@ -2,6 +2,7 @@
 build
 *.swp
 *.swo
+*.swn
 *.o
 *.gch
 __pycache__
@@ -9,3 +10,4 @@ __pycache__
 *.dSYM
 f
 crypto
+ft_ssl
